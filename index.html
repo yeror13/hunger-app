@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#1a1a2e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Hambre">
+<title>Hambre & Saciedad</title>
+<link rel="manifest" href="manifest.json">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f0f1a;
+    --surface: #1a1a2e;
+    --surface2: #22223a;
+    --border: rgba(255,255,255,0.08);
+    --text: #f0efe8;
+    --muted: rgba(240,239,232,0.45);
+    --hint: rgba(240,239,232,0.22);
+    --green: #7ecba1;
+    --green-bg: rgba(126,203,161,0.12);
+    --amber: #f4c063;
+    --amber-bg: rgba(244,192,99,0.12);
+    --red: #e8776a;
+    --red-bg: rgba(232,119,106,0.12);
+    --accent: #a594f9;
+    --accent-bg: rgba(165,148,249,0.12);
+    --radius: 16px;
+    --radius-sm: 10px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  html, body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 16px;
+    line-height: 1.5;
+    min-height: 100vh;
+    overscroll-behavior: none;
+  }
+
+  /* NAV */
+  .nav {
+    position: sticky; top: 0; z-index: 100;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 20px;
+  }
+  .nav-title { font-family: 'DM Serif Display', serif; font-size: 20px; letter-spacing: -0.3px; }
+  .nav-tabs { display: flex; gap: 4px; background: var(--surface); border-radius: 10px; padding: 3px; }
+  .nav-tab {
+    font-size: 13px; font-weight: 500; padding: 6px 14px;
+    border-radius: 8px; border: none; background: none; color: var(--muted); cursor: pointer;
+    transition: all 0.2s;
+  }
+  .nav-tab.active { background: var(--surface2); color: var(--text); }
+
+  /* SCREENS */
+  .screen { display: none; padding: 20px; padding-bottom: 32px; }
+  .screen.active { display: block; }
+
+  /* SECTION LABEL */
+  .section-label {
+    font-size: 11px; font-weight: 500; letter-spacing: 1px; text-transform: uppercase;
+    color: var(--hint); margin-bottom: 10px;
+  }
+
+  /* FORM */
+  .form-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 20px; margin-bottom: 16px;
+  }
+  .field { margin-bottom: 18px; }
+  .field:last-child { margin-bottom: 0; }
+  .field label { font-size: 13px; color: var(--muted); display: block; margin-bottom: 8px; }
+  .field input[type=text], .field textarea {
+    width: 100%; background: var(--surface2); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); padding: 12px 14px; color: var(--text);
+    font-family: 'DM Sans', sans-serif; font-size: 15px;
+    outline: none; transition: border-color 0.2s;
+  }
+  .field input[type=text]:focus, .field textarea:focus { border-color: var(--accent); }
+  .field textarea { resize: none; height: 70px; line-height: 1.4; }
+  ::placeholder { color: var(--hint); }
+
+  /* SLIDER */
+  .slider-wrap { padding: 4px 0; }
+  .slider-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px; }
+  .slider-num { font-size: 28px; font-family: 'DM Serif Display', serif; }
+  .slider-desc { font-size: 12px; color: var(--muted); text-align: right; max-width: 180px; line-height: 1.3; }
+  input[type=range] {
+    -webkit-appearance: none; width: 100%; height: 4px;
+    border-radius: 2px; outline: none; cursor: pointer;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 22px; height: 22px;
+    border-radius: 50%; background: var(--text);
+    box-shadow: 0 0 0 3px var(--bg), 0 0 0 5px var(--accent);
+    cursor: pointer; transition: transform 0.15s;
+  }
+  input[type=range]:active::-webkit-slider-thumb { transform: scale(1.2); }
+  .scale-marks { display: flex; justify-content: space-between; margin-top: 6px; }
+  .scale-mark { font-size: 10px; color: var(--hint); }
+
+  /* PILL */
+  .pill { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 500; padding: 3px 10px; border-radius: 20px; }
+  .pill-green { background: var(--green-bg); color: var(--green); }
+  .pill-amber { background: var(--amber-bg); color: var(--amber); }
+  .pill-red { background: var(--red-bg); color: var(--red); }
+  .pill-accent { background: var(--accent-bg); color: var(--accent); }
+
+  /* BUTTON */
+  .btn-primary {
+    width: 100%; padding: 16px; border-radius: var(--radius-sm);
+    background: var(--accent); color: #fff; border: none;
+    font-family: 'DM Sans', sans-serif; font-size: 16px; font-weight: 500;
+    cursor: pointer; transition: opacity 0.2s, transform 0.15s;
+    margin-top: 4px;
+  }
+  .btn-primary:active { opacity: 0.85; transform: scale(0.98); }
+  .btn-ghost {
+    background: none; border: 1px solid var(--border); color: var(--muted);
+    padding: 10px 16px; border-radius: var(--radius-sm);
+    font-family: 'DM Sans', sans-serif; font-size: 13px; cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-ghost:active { background: var(--surface2); }
+
+  /* ENTRIES */
+  .entry-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 16px; margin-bottom: 10px;
+    animation: fadeIn 0.3s ease;
+  }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  .entry-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+  .entry-meal { font-size: 16px; font-weight: 500; }
+  .entry-time { font-size: 12px; color: var(--hint); margin-top: 2px; }
+  .entry-food { font-size: 13px; color: var(--muted); margin-top: 2px; }
+  .entry-bars { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 10px 0; }
+  .bar-block label { font-size: 11px; color: var(--hint); display: block; margin-bottom: 4px; }
+  .bar-block .bar-val { font-size: 14px; font-weight: 500; margin-bottom: 4px; }
+  .mini-bar-bg { height: 4px; background: rgba(255,255,255,0.08); border-radius: 2px; overflow: hidden; }
+  .mini-bar { height: 4px; border-radius: 2px; transition: width 0.4s ease; }
+  .entry-notes { font-size: 13px; color: var(--muted); font-style: italic; border-top: 1px solid var(--border); padding-top: 10px; margin-top: 6px; }
+  .entry-del { background: none; border: none; color: var(--hint); font-size: 18px; cursor: pointer; padding: 4px 8px; line-height: 1; }
+  .empty-state { text-align: center; padding: 48px 20px; color: var(--hint); }
+  .empty-state .big { font-size: 40px; margin-bottom: 12px; }
+  .empty-state p { font-size: 14px; line-height: 1.6; }
+
+  /* STATS */
+  .metrics-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+  .metric-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); padding: 14px 16px;
+  }
+  .metric-label { font-size: 11px; color: var(--hint); margin-bottom: 4px; }
+  .metric-val { font-size: 26px; font-family: 'DM Serif Display', serif; }
+  .metric-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+  .insight-card {
+    border-radius: var(--radius-sm); padding: 14px 16px; margin-bottom: 10px;
+    font-size: 14px; line-height: 1.6;
+  }
+  .insight-card strong { display: block; font-size: 13px; font-weight: 500; margin-bottom: 4px; }
+  .insight-green { background: var(--green-bg); color: var(--green); }
+  .insight-amber { background: var(--amber-bg); color: var(--amber); }
+  .insight-red { background: var(--red-bg); color: var(--red); }
+
+  .week-chart { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin-bottom: 16px; }
+  .chart-title { font-size: 12px; color: var(--hint); margin-bottom: 14px; }
+  .chart-bars { display: flex; align-items: flex-end; gap: 6px; height: 80px; }
+  .chart-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; }
+  .chart-bar-wrap { width: 100%; flex: 1; display: flex; flex-direction: column; justify-content: flex-end; gap: 2px; }
+  .chart-bar { width: 100%; border-radius: 3px 3px 0 0; min-height: 3px; transition: height 0.4s; }
+  .chart-day { font-size: 10px; color: var(--hint); }
+
+  .export-btn {
+    width: 100%; padding: 14px; border-radius: var(--radius-sm);
+    background: var(--surface); border: 1px solid var(--border);
+    color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 15px;
+    font-weight: 500; cursor: pointer; display: flex; align-items: center;
+    justify-content: center; gap: 10px; transition: all 0.2s; margin-bottom: 10px;
+  }
+  .export-btn:active { background: var(--surface2); }
+  .export-icon { font-size: 18px; }
+
+  .toast {
+    position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(100px);
+    background: var(--surface2); border: 1px solid var(--border); border-radius: 30px;
+    padding: 10px 20px; font-size: 14px; color: var(--text);
+    transition: transform 0.3s ease; z-index: 999; white-space: nowrap;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+  .install-banner {
+    background: var(--accent-bg); border: 1px solid rgba(165,148,249,0.25);
+    border-radius: var(--radius-sm); padding: 12px 16px; margin-bottom: 16px;
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  }
+  .install-banner p { font-size: 13px; color: var(--accent); line-height: 1.4; }
+  .install-banner button { flex-shrink: 0; }
+</style>
+</head>
+<body>
+
+<div class="nav">
+  <span class="nav-title">Hambre</span>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="showScreen('registro')">Registro</button>
+    <button class="nav-tab" onclick="showScreen('historial')">Historial</button>
+    <button class="nav-tab" onclick="showScreen('progreso')">Progreso</button>
+  </div>
+</div>
+
+<!-- REGISTRO -->
+<div class="screen active" id="screen-registro">
+
+  <div id="install-banner" class="install-banner" style="display:none;">
+    <p>Instala esta app en tu pantalla de inicio para usarla sin internet.</p>
+    <button class="btn-ghost" onclick="installApp()">Instalar</button>
+  </div>
+
+  <div class="form-card">
+    <div class="field">
+      <label>Momento del día</label>
+      <input type="text" id="meal" placeholder="ej. desayuno, almuerzo, cena...">
+    </div>
+    <div class="field">
+      <label>¿Qué comiste? <span style="color:var(--hint)">(opcional)</span></label>
+      <input type="text" id="food" placeholder="ej. arroz con pollo, ensalada...">
+    </div>
+  </div>
+
+  <div class="form-card">
+    <div class="field">
+      <label>Hambre al <strong>entrar</strong></label>
+      <div class="slider-wrap">
+        <div class="slider-header">
+          <span class="slider-num" id="b-num" style="color: #e8776a">3</span>
+          <span class="slider-desc" id="b-desc">Hambre moderada — buen momento para comer</span>
+        </div>
+        <input type="range" min="1" max="10" step="1" value="3" id="before"
+          oninput="updateSlider('before')">
+        <div class="scale-marks">
+          <span class="scale-mark">1 hambre</span>
+          <span class="scale-mark">5 neutral</span>
+          <span class="scale-mark">10 lleno</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="form-card">
+    <div class="field">
+      <label>Saciedad al <strong>salir</strong></label>
+      <div class="slider-wrap">
+        <div class="slider-header">
+          <span class="slider-num" id="a-num" style="color: #f4c063">7</span>
+          <span class="slider-desc" id="a-desc">Satisfecho cómodamente — ideal para parar</span>
+        </div>
+        <input type="range" min="1" max="10" step="1" value="7" id="after"
+          oninput="updateSlider('after')">
+        <div class="scale-marks">
+          <span class="scale-mark">1 hambre</span>
+          <span class="scale-mark">5 neutral</span>
+          <span class="scale-mark">10 lleno</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="form-card">
+    <div class="field">
+      <label>Notas <span style="color:var(--hint)">(contexto, emociones, velocidad…)</span></label>
+      <textarea id="notes" placeholder="ej. comí rápido, estaba ansioso, había distracciones..."></textarea>
+    </div>
+  </div>
+
+  <button class="btn-primary" onclick="addEntry()">Guardar entrada</button>
+</div>
+
+<!-- HISTORIAL -->
+<div class="screen" id="screen-historial">
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+    <span class="section-label" style="margin:0;">Entradas guardadas</span>
+    <span id="entry-count" style="font-size:12px; color:var(--hint);"></span>
+  </div>
+  <div id="entries-list"></div>
+</div>
+
+<!-- PROGRESO -->
+<div class="screen" id="screen-progreso">
+  <div id="stats-content"></div>
+  <div style="margin-top:8px;">
+    <div class="section-label">Exportar datos</div>
+    <button class="export-btn" onclick="exportCSV()">
+      <span class="export-icon">↓</span> Descargar CSV
+    </button>
+    <button class="export-btn" onclick="exportTXT()">
+      <span class="export-icon">↓</span> Descargar resumen TXT
+    </button>
+    <button class="export-btn" onclick="clearAll()" style="color:var(--red); border-color:var(--red-bg);">
+      <span class="export-icon">⊗</span> Borrar todos los registros
+    </button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const LABELS = {
+  1:"Hambre extrema — mareos posibles",
+  2:"Muy hambriento — urgencia alta",
+  3:"Hambre moderada — buen momento",
+  4:"Algo de hambre — también buen momento",
+  5:"Neutral — sin hambre ni saciedad",
+  6:"Levemente satisfecho",
+  7:"Satisfecho cómodamente — ideal",
+  8:"Bastante lleno — zona de exceso",
+  9:"Muy lleno — incómodo",
+  10:"Lleno en exceso — malestar"
+};
+
+function sliderColor(v) {
+  if (v <= 2) return '#e8776a';
+  if (v <= 4) return '#f4c063';
+  if (v <= 7) return '#7ecba1';
+  if (v <= 8) return '#f4c063';
+  return '#e8776a';
+}
+
+function barColor(v) { return sliderColor(v); }
+
+function updateSlider(id) {
+  const v = parseInt(document.getElementById(id).value);
+  const prefix = id === 'before' ? 'b' : 'a';
+  document.getElementById(prefix+'-num').textContent = v;
+  document.getElementById(prefix+'-num').style.color = sliderColor(v);
+  document.getElementById(prefix+'-desc').textContent = LABELS[v];
+  const el = document.getElementById(id);
+  const pct = ((v-1)/9)*100;
+  el.style.background = `linear-gradient(to right, ${sliderColor(v)} ${pct}%, rgba(255,255,255,0.1) ${pct}%)`;
+}
+
+function initSliders() {
+  updateSlider('before');
+  updateSlider('after');
+}
+
+function loadEntries() {
+  try { return JSON.parse(localStorage.getItem('hambre_entries') || '[]'); }
+  catch { return []; }
+}
+
+function saveEntries(entries) {
+  localStorage.setItem('hambre_entries', JSON.stringify(entries));
+}
+
+function getPill(before, after) {
+  const ok = before >= 3 && before <= 4 && after >= 6 && after <= 7;
+  const bad = before <= 2 || after >= 8;
+  if (ok) return '<span class="pill pill-green">Óptimo</span>';
+  if (bad) return '<span class="pill pill-red">Alerta</span>';
+  return '<span class="pill pill-amber">Mejorable</span>';
+}
+
+function addEntry() {
+  const meal = document.getElementById('meal').value.trim() || 'Comida';
+  const food = document.getElementById('food').value.trim();
+  const before = parseInt(document.getElementById('before').value);
+  const after = parseInt(document.getElementById('after').value);
+  const notes = document.getElementById('notes').value.trim();
+  const now = new Date();
+  const entry = {
+    id: Date.now(),
+    meal, food, before, after, notes,
+    date: now.toLocaleDateString('es-PE'),
+    time: now.toLocaleTimeString('es', {hour:'2-digit', minute:'2-digit'}),
+    ts: now.getTime()
+  };
+  const entries = loadEntries();
+  entries.unshift(entry);
+  saveEntries(entries);
+
+  document.getElementById('meal').value = '';
+  document.getElementById('food').value = '';
+  document.getElementById('notes').value = '';
+  document.getElementById('before').value = 3;
+  document.getElementById('after').value = 7;
+  initSliders();
+  showToast('Entrada guardada');
+}
+
+function renderHistorial() {
+  const entries = loadEntries();
+  const el = document.getElementById('entries-list');
+  document.getElementById('entry-count').textContent = entries.length ? `${entries.length} entrada${entries.length>1?'s':''}` : '';
+  if (!entries.length) {
+    el.innerHTML = `<div class="empty-state"><div class="big">🍽</div><p>Aún no tienes registros.<br>Ve a <strong>Registro</strong> para añadir tu primera entrada.</p></div>`;
+    return;
+  }
+  let html = '';
+  let lastDate = '';
+  entries.forEach(e => {
+    if (e.date !== lastDate) {
+      html += `<div class="section-label" style="margin-top:${lastDate?'20px':'4px'};">${e.date}</div>`;
+      lastDate = e.date;
+    }
+    const bPct = Math.round((e.before/10)*100);
+    const aPct = Math.round((e.after/10)*100);
+    html += `<div class="entry-card">
+      <div class="entry-top">
+        <div>
+          <div class="entry-meal">${e.meal}</div>
+          ${e.food ? `<div class="entry-food">${e.food}</div>` : ''}
+          <div class="entry-time">${e.time}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          ${getPill(e.before, e.after)}
+          <button class="entry-del" onclick="deleteEntry(${e.id})">×</button>
+        </div>
+      </div>
+      <div class="entry-bars">
+        <div class="bar-block">
+          <label>Entré con hambre</label>
+          <div class="bar-val" style="color:${barColor(e.before)}">${e.before} — ${LABELS[e.before]}</div>
+          <div class="mini-bar-bg"><div class="mini-bar" style="width:${bPct}%;background:${barColor(e.before)};"></div></div>
+        </div>
+        <div class="bar-block">
+          <label>Salí con saciedad</label>
+          <div class="bar-val" style="color:${barColor(e.after)}">${e.after} — ${LABELS[e.after]}</div>
+          <div class="mini-bar-bg"><div class="mini-bar" style="width:${aPct}%;background:${barColor(e.after)};"></div></div>
+        </div>
+      </div>
+      ${e.notes ? `<div class="entry-notes">"${e.notes}"</div>` : ''}
+    </div>`;
+  });
+  el.innerHTML = html;
+}
+
+function deleteEntry(id) {
+  if (!confirm('¿Eliminar esta entrada?')) return;
+  const entries = loadEntries().filter(e => e.id !== id);
+  saveEntries(entries);
+  renderHistorial();
+  showToast('Entrada eliminada');
+}
+
+function renderProgreso() {
+  const entries = loadEntries();
+  const el = document.getElementById('stats-content');
+  if (!entries.length) {
+    el.innerHTML = `<div class="empty-state"><div class="big">📊</div><p>Agrega algunas entradas para ver tu progreso aquí.</p></div>`;
+    return;
+  }
+  const n = entries.length;
+  const avgB = (entries.reduce((s,e)=>s+e.before,0)/n).toFixed(1);
+  const avgA = (entries.reduce((s,e)=>s+e.after,0)/n).toFixed(1);
+  const optimal = entries.filter(e=>e.before>=3&&e.before<=4&&e.after>=6&&e.after<=7).length;
+  const pct = Math.round((optimal/n)*100);
+  const highAfter = entries.filter(e=>e.after>=8).length;
+  const lowBefore = entries.filter(e=>e.before<=2).length;
+
+  let insights = '';
+  if (parseFloat(avgA) >= 8) {
+    insights += `<div class="insight-card insight-red"><strong>Saciedad alta al salir</strong>Tu promedio al terminar es ${avgA}. Practica pausar a mitad de la comida y checar tu nivel antes de continuar.</div>`;
+  } else if (parseFloat(avgA) >= 7.5) {
+    insights += `<div class="insight-card insight-amber"><strong>Cerca del límite</strong>Saciedad promedio ${avgA}. Vas bien — puedes practicar parar un poco antes, en 6–7.</div>`;
+  } else {
+    insights += `<div class="insight-card insight-green"><strong>Buen ritmo</strong>Saciedad promedio ${avgA}. Estás saliendo en zona cómoda.</div>`;
+  }
+  if (lowBefore > 0) {
+    insights += `<div class="insight-card insight-amber"><strong>Llegaste con hambre extrema ${lowBefore}×</strong>Llegar en nivel 1–2 hace difícil comer con calma. Intenta comer cuando estés en 3–4.</div>`;
+  }
+  if (pct >= 60) {
+    insights += `<div class="insight-card insight-green"><strong>${pct}% de comidas en zona óptima</strong>Estás construyendo un buen hábito.</div>`;
+  }
+
+  // Últimos 7 días chart
+  const days = {};
+  const today = new Date();
+  for (let i=6; i>=0; i--) {
+    const d = new Date(today); d.setDate(d.getDate()-i);
+    const key = d.toLocaleDateString('es-PE');
+    days[key] = { label: d.toLocaleDateString('es', {weekday:'narrow'}), entries: [] };
+  }
+  entries.forEach(e => { if (days[e.date]) days[e.date].entries.push(e); });
+
+  const dayVals = Object.values(days);
+  const maxEntries = Math.max(...dayVals.map(d=>d.entries.length), 1);
+  let chartHTML = '<div class="chart-bars">';
+  dayVals.forEach(d => {
+    const count = d.entries.length;
+    const avgAfterDay = count ? d.entries.reduce((s,e)=>s+e.after,0)/count : 0;
+    const h = count ? Math.max(12, Math.round((count/maxEntries)*72)) : 0;
+    const c = count ? (avgAfterDay>=8?'#e8776a':avgAfterDay>=7?'#f4c063':'#7ecba1') : 'rgba(255,255,255,0.06)';
+    chartHTML += `<div class="chart-col">
+      <div class="chart-bar-wrap">
+        <div class="chart-bar" style="height:${h}px;background:${c};"></div>
+      </div>
+      <div class="chart-day">${d.label}</div>
+    </div>`;
+  });
+  chartHTML += '</div>';
+
+  el.innerHTML = `
+    <div class="section-label">Resumen general</div>
+    <div class="metrics-grid">
+      <div class="metric-card"><div class="metric-label">Entradas totales</div><div class="metric-val">${n}</div></div>
+      <div class="metric-card"><div class="metric-label">Zona óptima</div><div class="metric-val">${pct}%</div></div>
+      <div class="metric-card"><div class="metric-label">Promedio al entrar</div><div class="metric-val">${avgB}</div><div class="metric-sub">meta: 3–4</div></div>
+      <div class="metric-card"><div class="metric-label">Promedio al salir</div><div class="metric-val">${avgA}</div><div class="metric-sub">meta: 6–7</div></div>
+    </div>
+    <div class="week-chart">
+      <div class="chart-title">Comidas por día — últimos 7 días</div>
+      ${chartHTML}
+    </div>
+    <div class="section-label">Observaciones</div>
+    ${insights}
+  `;
+}
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('screen-'+id).classList.add('active');
+  event.target.classList.add('active');
+  if (id === 'historial') renderHistorial();
+  if (id === 'progreso') renderProgreso();
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+function exportCSV() {
+  const entries = loadEntries();
+  if (!entries.length) { showToast('No hay entradas'); return; }
+  const header = 'Fecha,Hora,Comida,Alimento,Hambre al entrar,Saciedad al salir,Notas';
+  const rows = entries.map(e =>
+    `"${e.date}","${e.time}","${e.meal}","${e.food}","${e.before}","${e.after}","${e.notes.replace(/"/g,'""')}"`
+  );
+  const csv = [header, ...rows].join('\n');
+  download('\uFEFF'+csv, 'hambre_registro.csv', 'text/csv');
+  showToast('CSV descargado');
+}
+
+function exportTXT() {
+  const entries = loadEntries();
+  if (!entries.length) { showToast('No hay entradas'); return; }
+  const n = entries.length;
+  const avgB = (entries.reduce((s,e)=>s+e.before,0)/n).toFixed(1);
+  const avgA = (entries.reduce((s,e)=>s+e.after,0)/n).toFixed(1);
+  const optimal = entries.filter(e=>e.before>=3&&e.before<=4&&e.after>=6&&e.after<=7).length;
+  let txt = `HAMBRE & SACIEDAD — Resumen\n`;
+  txt += `Generado: ${new Date().toLocaleDateString('es-PE')}\n\n`;
+  txt += `RESUMEN\n`;
+  txt += `Entradas totales: ${n}\n`;
+  txt += `Promedio al entrar: ${avgB} (meta: 3–4)\n`;
+  txt += `Promedio al salir: ${avgA} (meta: 6–7)\n`;
+  txt += `Comidas en zona óptima: ${optimal} (${Math.round(optimal/n*100)}%)\n\n`;
+  txt += `ENTRADAS DETALLADAS\n${'─'.repeat(40)}\n`;
+  entries.forEach(e => {
+    txt += `\n[${e.date} ${e.time}] ${e.meal}\n`;
+    if (e.food) txt += `  Alimento: ${e.food}\n`;
+    txt += `  Entré: ${e.before}/10 — Salí: ${e.after}/10\n`;
+    if (e.notes) txt += `  Notas: ${e.notes}\n`;
+  });
+  download(txt, 'hambre_resumen.txt', 'text/plain');
+  showToast('TXT descargado');
+}
+
+function download(content, filename, type) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([content], {type}));
+  a.download = filename; a.click();
+}
+
+function clearAll() {
+  if (!confirm('¿Borrar TODOS los registros? Esta acción no se puede deshacer.')) return;
+  localStorage.removeItem('hambre_entries');
+  renderHistorial();
+  renderProgreso();
+  showToast('Registros eliminados');
+}
+
+// PWA install
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault(); deferredPrompt = e;
+  document.getElementById('install-banner').style.display = 'flex';
+});
+function installApp() {
+  if (!deferredPrompt) return;
+  deferredPrompt.prompt();
+  deferredPrompt.userChoice.then(() => {
+    deferredPrompt = null;
+    document.getElementById('install-banner').style.display = 'none';
+  });
+}
+
+initSliders();
+
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js');
+}
+</script>
+</body>
+</html>
