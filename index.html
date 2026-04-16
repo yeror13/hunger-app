@@ -1,0 +1,1029 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0f0f1a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Slow Bite">
+<title>Slow Bite</title>
+<link rel="manifest" href="manifest.json">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f0f1a;
+    --surface: #1c1c30;
+    --surface2: #26263f;
+    --border: rgba(255,255,255,0.10);
+    --text: #f4f3ec;
+    --muted: rgba(244,243,236,0.55);
+    --hint: rgba(244,243,236,0.28);
+    --green: #7ecba1;
+    --green-bg: rgba(126,203,161,0.14);
+    --amber: #f4c063;
+    --amber-bg: rgba(244,192,99,0.14);
+    --red: #e8776a;
+    --red-bg: rgba(232,119,106,0.14);
+    --sky: #6ec6e6;
+    --sky-bg: rgba(110,198,230,0.14);
+    --accent: #a594f9;
+    --accent-bg: rgba(165,148,249,0.14);
+    --radius: 16px;
+    --radius-sm: 11px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 17px; line-height: 1.5; min-height: 100vh; overscroll-behavior: none; }
+
+  .header { position: sticky; top: 0; z-index: 100; background: var(--bg); border-bottom: 1px solid var(--border); padding: 14px 20px 0; }
+  .header-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+  .app-title { font-family: 'DM Serif Display', serif; font-size: 26px; letter-spacing: -0.5px; color: var(--text); }
+  .sync-btn { display: flex; align-items: center; gap: 7px; background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 6px 14px; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500; color: var(--muted); cursor: pointer; transition: all 0.2s; }
+  .sync-btn:active { background: var(--surface2); }
+  .sync-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; background: var(--hint); transition: background 0.3s; }
+  .sync-dot.green { background: var(--green); }
+  .sync-dot.amber { background: var(--amber); }
+  .sync-dot.red { background: var(--red); }
+  .nav-tabs { display: flex; gap: 4px; background: var(--surface); border-radius: 11px; padding: 3px; margin-bottom: 12px; }
+  .nav-tab { flex: 1; font-size: 14px; font-weight: 500; padding: 8px 6px; border-radius: 9px; border: none; background: none; color: var(--muted); cursor: pointer; transition: all 0.2s; text-align: center; }
+  .nav-tab.active { background: var(--surface2); color: var(--text); }
+
+  .screen { display: none; padding: 16px 20px 48px; }
+  .screen.active { display: block; }
+  .section-label { font-size: 12px; font-weight: 500; letter-spacing: 1px; text-transform: uppercase; color: var(--hint); margin-bottom: 10px; }
+  .form-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; margin-bottom: 14px; }
+
+  .meal-grid-main { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 10px; }
+  .meal-grid-snack { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+  .meal-btn { padding: 13px 4px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--surface2); color: var(--muted); font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s; text-align: center; }
+  .meal-btn.selected { border-color: var(--accent); background: var(--accent-bg); color: var(--accent); }
+  .meal-btn.snack { font-size: 13px; color: var(--hint); border-style: dashed; }
+  .meal-btn.snack.selected { border-color: var(--accent); background: var(--accent-bg); color: var(--accent); border-style: solid; }
+
+  .food-col-headers { display: flex; gap: 8px; margin-bottom: 6px; }
+  .food-col-headers span { font-size: 12px; color: var(--hint); }
+  .food-item-row { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; animation: fadeIn 0.2s ease; }
+  .food-search-wrap { position: relative; flex: 1; }
+  .food-search-wrap input { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px 13px; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 15px; outline: none; transition: border-color 0.2s; }
+  .food-search-wrap input:focus { border-color: var(--accent); }
+  .food-search-wrap input.confirmed { border-color: rgba(126,203,161,0.5); color: var(--green); }
+  .autocomplete-list { position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm); z-index: 50; max-height: 200px; overflow-y: auto; }
+  .ac-item { padding: 11px 13px; font-size: 15px; cursor: pointer; border-bottom: 1px solid var(--border); color: var(--text); }
+  .ac-item:last-child { border-bottom: none; }
+  .ac-item:active { background: var(--surface); }
+  .grams-input { width: 72px; flex-shrink: 0; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px 8px; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 15px; outline: none; text-align: center; transition: border-color 0.2s; }
+  .grams-input:focus { border-color: var(--accent); }
+  .del-row-btn { background: none; border: none; color: var(--hint); font-size: 22px; cursor: pointer; padding: 6px 2px; line-height: 1; flex-shrink: 0; }
+  .add-item-btn { width: 100%; padding: 12px; border-radius: var(--radius-sm); border: 1px dashed var(--border); background: none; color: var(--muted); font-family: 'DM Sans', sans-serif; font-size: 15px; cursor: pointer; transition: all 0.2s; margin-top: 6px; }
+  .add-item-btn:active { background: var(--surface2); }
+
+  .slider-wrap { padding: 4px 0; }
+  .slider-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px; }
+  .slider-num { font-size: 30px; font-family: 'DM Serif Display', serif; }
+  .slider-desc { font-size: 13px; color: var(--muted); text-align: right; max-width: 190px; line-height: 1.3; }
+  .slider-label { font-size: 14px; color: var(--muted); display: block; margin-bottom: 10px; }
+  input[type=range] { -webkit-appearance: none; width: 100%; height: 4px; border-radius: 2px; outline: none; cursor: pointer; }
+  input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 24px; height: 24px; border-radius: 50%; background: var(--text); box-shadow: 0 0 0 3px var(--bg), 0 0 0 5px var(--accent); cursor: pointer; transition: transform 0.15s; }
+  input[type=range]:active::-webkit-slider-thumb { transform: scale(1.2); }
+  input[type=range]:disabled { opacity: 0.25; cursor: default; }
+  input[type=range]:disabled::-webkit-slider-thumb { box-shadow: 0 0 0 3px var(--bg), 0 0 0 5px var(--hint); }
+  .scale-marks { display: flex; justify-content: space-between; margin-top: 6px; }
+  .scale-mark { font-size: 11px; color: var(--hint); }
+
+  .distraction-opts { display: flex; flex-direction: column; gap: 8px; }
+  .dist-btn { display: flex; align-items: center; gap: 12px; padding: 13px 16px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--surface2); cursor: pointer; transition: all 0.2s; font-family: 'DM Sans', sans-serif; font-size: 15px; color: var(--muted); text-align: left; width: 100%; }
+  .dist-btn .dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .dist-btn.selected-green { border-color: rgba(126,203,161,0.5); background: var(--green-bg); color: var(--green); }
+  .dist-btn.selected-amber { border-color: rgba(244,192,99,0.5); background: var(--amber-bg); color: var(--amber); }
+  .dist-btn.selected-red { border-color: rgba(232,119,106,0.5); background: var(--red-bg); color: var(--red); }
+
+  .context-block { margin-bottom: 14px; }
+  .context-block-title { font-size: 13px; color: var(--muted); margin-bottom: 8px; display: block; }
+  .context-block textarea { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px 14px; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 15px; outline: none; transition: border-color 0.2s; resize: none; height: 72px; line-height: 1.4; }
+  .context-block textarea:focus { border-color: var(--accent); }
+  .context-divider { height: 1px; background: var(--border); margin: 14px 0; }
+  ::placeholder { color: var(--hint); }
+
+  .pill { display: inline-flex; align-items: center; font-size: 13px; font-weight: 500; padding: 3px 11px; border-radius: 20px; }
+  .pill-green { background: var(--green-bg); color: var(--green); }
+  .pill-amber { background: var(--amber-bg); color: var(--amber); }
+  .pill-red { background: var(--red-bg); color: var(--red); }
+
+  .btn-primary { width: 100%; padding: 17px; border-radius: var(--radius-sm); background: var(--accent); color: #fff; border: none; font-family: 'DM Sans', sans-serif; font-size: 17px; font-weight: 500; cursor: pointer; transition: opacity 0.2s, transform 0.15s; margin-top: 4px; }
+  .btn-primary:active { opacity: 0.85; transform: scale(0.98); }
+  .btn-ghost { background: none; border: 1px solid var(--border); color: var(--muted); padding: 11px 16px; border-radius: var(--radius-sm); font-family: 'DM Sans', sans-serif; font-size: 14px; cursor: pointer; transition: all 0.2s; }
+  .btn-ghost:active { background: var(--surface2); }
+
+  .entry-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin-bottom: 10px; animation: fadeIn 0.3s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  .entry-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+  .entry-meal { font-size: 17px; font-weight: 500; }
+  .entry-time { font-size: 13px; color: var(--hint); margin-top: 2px; }
+  .entry-foods { margin: 8px 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); padding: 8px 0; }
+  .entry-food-row { display: flex; justify-content: space-between; padding: 2px 0; font-size: 14px; color: var(--muted); }
+  .entry-food-g { color: var(--hint); font-size: 13px; }
+  .entry-bars { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+  .bar-block label { font-size: 12px; color: var(--hint); display: block; margin-bottom: 4px; }
+  .bar-block .bar-val { font-size: 14px; font-weight: 500; margin-bottom: 4px; }
+  .mini-bar-bg { height: 4px; background: rgba(255,255,255,0.08); border-radius: 2px; overflow: hidden; }
+  .mini-bar { height: 4px; border-radius: 2px; }
+  .entry-meta { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+  .entry-meta-tag { font-size: 12px; color: var(--hint); background: var(--surface2); padding: 3px 10px; border-radius: 20px; }
+  .entry-notes { font-size: 14px; color: var(--muted); font-style: italic; border-top: 1px solid var(--border); padding-top: 10px; margin-top: 10px; }
+  .entry-del { background: none; border: none; color: var(--hint); font-size: 20px; cursor: pointer; padding: 4px 8px; line-height: 1; }
+  .empty-state { text-align: center; padding: 48px 20px; color: var(--hint); }
+  .empty-state .big { font-size: 40px; margin-bottom: 12px; }
+  .empty-state p { font-size: 15px; line-height: 1.6; }
+
+  .metrics-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+  .metric-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 14px 16px; }
+  .metric-label { font-size: 12px; color: var(--hint); margin-bottom: 4px; }
+  .metric-val { font-size: 26px; font-family: 'DM Serif Display', serif; }
+  .metric-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .insight-card { border-radius: var(--radius-sm); padding: 14px 16px; margin-bottom: 10px; font-size: 15px; line-height: 1.6; }
+  .insight-card strong { display: block; font-size: 14px; font-weight: 500; margin-bottom: 4px; }
+  .insight-green { background: var(--green-bg); color: var(--green); }
+  .insight-amber { background: var(--amber-bg); color: var(--amber); }
+  .insight-red { background: var(--red-bg); color: var(--red); }
+  .week-chart { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin-bottom: 16px; }
+  .chart-title { font-size: 13px; color: var(--hint); margin-bottom: 14px; }
+  .chart-bars { display: flex; align-items: flex-end; gap: 6px; height: 80px; }
+  .chart-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; }
+  .chart-bar-wrap { width: 100%; flex: 1; display: flex; flex-direction: column; justify-content: flex-end; }
+  .chart-bar { width: 100%; border-radius: 3px 3px 0 0; min-height: 3px; }
+  .chart-day { font-size: 11px; color: var(--hint); }
+  .export-btn { width: 100%; padding: 14px; border-radius: var(--radius-sm); background: var(--surface); border: 1px solid var(--border); color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 500; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; transition: all 0.2s; margin-bottom: 10px; }
+  .export-btn:active { background: var(--surface2); }
+  .toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(100px); background: var(--surface2); border: 1px solid var(--border); border-radius: 30px; padding: 11px 22px; font-size: 15px; color: var(--text); transition: transform 0.3s ease; z-index: 999; white-space: nowrap; }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+  .install-banner { background: var(--accent-bg); border: 1px solid rgba(165,148,249,0.25); border-radius: var(--radius-sm); padding: 13px 16px; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .install-banner p { font-size: 14px; color: var(--accent); line-height: 1.4; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-top">
+    <div class="app-title">Slow Bite</div>
+    <span id="backup-label" style="font-size:12px;color:var(--hint);"></span>
+  </div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="showScreen('registro',this)">Registro</button>
+    <button class="nav-tab" onclick="showScreen('historial',this)">Historial</button>
+    <button class="nav-tab" onclick="showScreen('progreso',this)">Progreso</button>
+  </div>
+</div>
+
+<div class="screen active" id="screen-registro">
+  <div id="install-banner" class="install-banner" style="display:none;">
+    <p>Instala esta app en tu pantalla de inicio para usarla sin internet.</p>
+    <button class="btn-ghost" onclick="installApp()">Instalar</button>
+  </div>
+
+  <div class="form-card">
+    <div class="meal-grid-main">
+      <button class="meal-btn" id="btn-Desayuno" onclick="selectMeal('Desayuno')">Desayuno</button>
+      <button class="meal-btn" id="btn-Almuerzo" onclick="selectMeal('Almuerzo')">Almuerzo</button>
+      <button class="meal-btn" id="btn-Cena" onclick="selectMeal('Cena')">Cena</button>
+    </div>
+    <div class="meal-grid-snack">
+      <button class="meal-btn snack" id="btn-Snack1" onclick="selectMeal('Snack 1')">Snack 1</button>
+      <button class="meal-btn snack" id="btn-Snack2" onclick="selectMeal('Snack 2')">Snack 2</button>
+      <button class="meal-btn snack" id="btn-Snack3" onclick="selectMeal('Snack 3')">Snack 3</button>
+    </div>
+  </div>
+
+  <div class="form-card">
+    <span class="context-block-title">Hora de la refección</span>
+    <input type="time" id="inputTime" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:15px;outline:none;">
+  </div>
+
+  <div class="form-card">
+    <div class="food-col-headers">
+      <span style="flex:1;">Alimento</span>
+      <span style="width:72px;text-align:center;">Cant.</span>
+      <span style="width:28px;"></span>
+    </div>
+    <div id="food-items"></div>
+    <button class="add-item-btn" onclick="addFoodRow()">+ añadir alimento</button>
+  </div>
+
+  <div class="form-card">
+    <span class="slider-label">Hambre al <strong>entrar</strong></span>
+    <div class="slider-wrap">
+      <div class="slider-header">
+        <span class="slider-num" id="b-num">3</span>
+        <span class="slider-desc" id="b-desc">Hambre moderada — buen momento</span>
+      </div>
+      <input type="range" min="1" max="10" step="1" value="3" id="before" oninput="updateSlider('before')" ontouchstart="document.activeElement.blur()">
+      <div class="scale-marks">
+        <span class="scale-mark">1 hambre</span>
+        <span class="scale-mark">5 neutral</span>
+        <span class="scale-mark">10 lleno</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="form-card">
+    <span class="slider-label">Saciedad al <strong>salir</strong></span>
+    <div class="slider-wrap">
+      <div class="slider-header">
+        <span class="slider-num" id="a-num">7</span>
+        <span class="slider-desc" id="a-desc">Satisfecho cómodamente — ideal</span>
+      </div>
+      <input type="range" min="1" max="10" step="1" value="7" id="after" oninput="updateSlider('after')" ontouchstart="document.activeElement.blur()">
+      <div class="scale-marks">
+        <span class="scale-mark">1 hambre</span>
+        <span class="scale-mark">5 neutral</span>
+        <span class="scale-mark">10 lleno</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="form-card">
+    <span class="slider-label" id="dur-label" style="color:var(--muted);">Duración de la comida</span>
+    <div class="slider-wrap">
+      <div class="slider-header">
+        <span class="slider-num" id="d-num" style="color:var(--hint);">—</span>
+        <span class="slider-desc" id="d-desc" style="color:var(--hint);"></span>
+      </div>
+      <input type="range" id="duration" min="1" max="30" step="1" value="10" disabled oninput="updateDuration()" ontouchstart="document.activeElement.blur()">
+      <div class="scale-marks">
+        <span class="scale-mark" id="dur-min"></span>
+        <span class="scale-mark" id="dur-max"></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="form-card">
+    <span class="slider-label">Distracciones</span>
+    <div class="distraction-opts">
+      <button class="dist-btn" id="dist-low" onclick="selectDist('low')">
+        <span class="dot" style="background:var(--green);"></span>
+        Baja — sin pantallas / conversación ligera
+      </button>
+      <button class="dist-btn" id="dist-mod" onclick="selectDist('mod')">
+        <span class="dot" style="background:var(--amber);"></span>
+        Moderada — lectura / contenido pasivo
+      </button>
+      <button class="dist-btn" id="dist-high" onclick="selectDist('high')">
+        <span class="dot" style="background:var(--red);"></span>
+        Alta — trabajo / celular / pantalla activa
+      </button>
+    </div>
+  </div>
+
+  <div class="form-card">
+    <div class="context-block">
+      <span class="context-block-title">Contexto</span>
+      <textarea id="context" placeholder="ej. comí rápido, estaba ansioso, había ruido..."></textarea>
+    </div>
+    <div class="context-divider"></div>
+    <div class="context-block" style="margin-bottom:0;">
+      <span class="context-block-title">Notas de la comida anterior</span>
+      <textarea id="prev-notes" placeholder="ej. embotamiento, gases, hinchazón, pesadez..."></textarea>
+    </div>
+  </div>
+
+  <button class="btn-primary" onclick="addEntry()">Guardar entrada</button>
+</div>
+
+<div class="screen" id="screen-historial">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+    <span class="section-label" style="margin:0;">Entradas guardadas</span>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <button class="btn-ghost" style="padding:7px 12px;font-size:13px;" onclick="importJSON()">↑ JSON</button>
+      <button class="btn-ghost" style="padding:7px 12px;font-size:13px;" onclick="exportJSON()">↓ JSON</button>
+      <input type="file" id="importFile" accept=".json" style="display:none" onchange="handleImport(event)">
+    </div>
+  </div>
+  <span id="entry-count" style="font-size:13px;color:var(--hint);display:block;margin-bottom:12px;"></span>
+  <div id="entries-list"></div>
+</div>
+
+<div class="screen" id="screen-progreso">
+  <div id="stats-content"></div>
+  <div style="margin-top:8px;">
+    <button class="export-btn" onclick="clearAll()" style="color:var(--red);border-color:var(--red-bg);">⊗ &nbsp;Borrar todos los registros</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const LS_KEY = 'slowbite_entries';
+
+// ── BASE NUTRICIONAL ─────────────────────────────────────────────────────
+const FOODS_DB = {
+  // Proteínas
+  "Pollo":                      { cat:'Proteínas',       medida:'porción',    equiv:'1 presa mediana cocida ~120g',  cal:165, prot:31, carb:0,  grasa:4,  grasa_sat:1,   grasa_insat:3   },
+  "Carne de res":               { cat:'Proteínas',       medida:'porción',    equiv:'1 porción cocida ~120g',        cal:220, prot:26, carb:0,  grasa:12, grasa_sat:5,   grasa_insat:7   },
+  "Chancho":                    { cat:'Proteínas',       medida:'porción',    equiv:'1 porción cocida ~120g',        cal:250, prot:24, carb:0,  grasa:16, grasa_sat:6,   grasa_insat:10  },
+  "Pescado":                    { cat:'Proteínas',       medida:'porción',    equiv:'1 filete mediano ~120g',        cal:140, prot:28, carb:0,  grasa:3,  grasa_sat:0.5, grasa_insat:2.5 },
+  "Atún en lata":               { cat:'Proteínas',       medida:'porción',    equiv:'½ lata ~85g escurrido',         cal:100, prot:22, carb:0,  grasa:1,  grasa_sat:0.5, grasa_insat:0.5 },
+  "Huevo":                      { cat:'Proteínas',       medida:'unidad',     equiv:'1 huevo mediano ~55g',          cal:70,  prot:6,  carb:0,  grasa:5,  grasa_sat:1.5, grasa_insat:3.5 },
+  "Queso":                      { cat:'Proteínas',       medida:'porción',    equiv:'1 tajada ~30g',                 cal:100, prot:7,  carb:1,  grasa:8,  grasa_sat:5,   grasa_insat:3   },
+  "Yogurt sin azúcar":          { cat:'Proteínas',       medida:'porción',    equiv:'1 taza ~200g',                  cal:110, prot:10, carb:9,  grasa:3,  grasa_sat:2,   grasa_insat:1   },
+  "Leche sin lactosa":          { cat:'Proteínas',       medida:'porción',    equiv:'1 taza 250ml',                  cal:120, prot:8,  carb:12, grasa:5,  grasa_sat:3,   grasa_insat:2   },
+  "Salchicha":                  { cat:'Proteínas',       medida:'unidad',     equiv:'1 unidad ~50g',                 cal:150, prot:6,  carb:2,  grasa:13, grasa_sat:5,   grasa_insat:8   },
+  "Jamón cocido":               { cat:'Proteínas',       medida:'porción',    equiv:'2 tajadas ~50g',                cal:65,  prot:9,  carb:1,  grasa:3,  grasa_sat:1,   grasa_insat:2   },
+  "Jamón curado":               { cat:'Proteínas',       medida:'porción',    equiv:'2 tajadas ~50g',                cal:120, prot:12, carb:0,  grasa:8,  grasa_sat:3,   grasa_insat:5   },
+  "Chorizo":                    { cat:'Proteínas',       medida:'unidad',     equiv:'1 unidad ~60g',                 cal:200, prot:9,  carb:1,  grasa:18, grasa_sat:7,   grasa_insat:11  },
+  "Batido proteico":            { cat:'Proteínas',       medida:'unidad',     equiv:'1 batido completo',             cal:440, prot:30, carb:42, grasa:20, grasa_sat:4,   grasa_insat:16  },
+  "Frejol":                     { cat:'Proteínas',       medida:'porción',    equiv:'1 taza cocido ~180g',           cal:225, prot:15, carb:40, grasa:1,  grasa_sat:0,   grasa_insat:1   },
+  "Arvejita partida":           { cat:'Proteínas',       medida:'porción',    equiv:'1 taza cocida ~180g',           cal:230, prot:16, carb:42, grasa:1,  grasa_sat:0,   grasa_insat:1   },
+  // Carbohidratos complejos
+  "Arroz integral":             { cat:'Carb. complejos', medida:'porción',    equiv:'1 taza cocido 250ml',           cal:215, prot:5,  carb:45, grasa:2,  grasa_sat:0,   grasa_insat:2   },
+  "Avena":                      { cat:'Carb. complejos', medida:'porción',    equiv:'1 taza cocida 250ml',           cal:150, prot:5,  carb:27, grasa:3,  grasa_sat:0.5, grasa_insat:2.5 },
+  "Papa":                       { cat:'Carb. complejos', medida:'unidad',     equiv:'1 unidad mediana ~150g',        cal:115, prot:3,  carb:26, grasa:0,  grasa_sat:0,   grasa_insat:0   },
+  "Camote":                     { cat:'Carb. complejos', medida:'unidad',     equiv:'1 unidad mediana ~150g',        cal:130, prot:2,  carb:30, grasa:0,  grasa_sat:0,   grasa_insat:0   },
+  "Yuca":                       { cat:'Carb. complejos', medida:'porción',    equiv:'1 porción cocida ~150g',        cal:165, prot:1,  carb:39, grasa:0,  grasa_sat:0,   grasa_insat:0   },
+  "Plátano bellaco al horno":   { cat:'Carb. complejos', medida:'unidad',     equiv:'1 unidad mediana ~150g',        cal:175, prot:2,  carb:43, grasa:0.5,grasa_sat:0,   grasa_insat:0.5 },
+  "Quinua":                     { cat:'Carb. complejos', medida:'porción',    equiv:'1 taza cocida 250ml',           cal:220, prot:8,  carb:39, grasa:4,  grasa_sat:0.5, grasa_insat:3.5 },
+  "Pasta":                      { cat:'Carb. complejos', medida:'porción',    equiv:'1 taza cocida 250ml',           cal:200, prot:7,  carb:40, grasa:1,  grasa_sat:0,   grasa_insat:1   },
+  "Pan integral":               { cat:'Carb. complejos', medida:'unidad',     equiv:'1 rebanada ~35g',               cal:80,  prot:4,  carb:15, grasa:1,  grasa_sat:0,   grasa_insat:1   },
+  "Choclo":                     { cat:'Carb. complejos', medida:'porción',    equiv:'1 taza desgranado ~154g',       cal:135, prot:5,  carb:31, grasa:2,  grasa_sat:0.3, grasa_insat:1.7 },
+  // Carbohidratos refinados
+  "Pan blanco":                 { cat:'Carb. refinados', medida:'unidad',     equiv:'1 pan francés estándar',        cal:160, prot:6,  carb:30, grasa:2,  grasa_sat:0.5, grasa_insat:1.5 },
+  "Arroz blanco":               { cat:'Carb. refinados', medida:'porción',    equiv:'1 taza cocido 250ml',           cal:200, prot:4,  carb:44, grasa:0,  grasa_sat:0,   grasa_insat:0   },
+  "Azúcar":                     { cat:'Carb. refinados', medida:'cucharada',  equiv:'1 cda ~10g',                    cal:40,  prot:0,  carb:10, grasa:0,  grasa_sat:0,   grasa_insat:0   },
+  "Repostería":                 { cat:'Carb. refinados', medida:'porción',    equiv:'1 porción ~100g',               cal:360, prot:6,  carb:60, grasa:18, grasa_sat:10,  grasa_insat:8   },
+  "Mermelada":                  { cat:'Carb. refinados', medida:'cucharada',  equiv:'1 cda ~20g',                    cal:50,  prot:0,  carb:13, grasa:0,  grasa_sat:0,   grasa_insat:0   },
+  "Fruta deshidratada":         { cat:'Carb. refinados', medida:'porción',    equiv:'1 puñado ~30g',                 cal:100, prot:1,  carb:26, grasa:0,  grasa_sat:0,   grasa_insat:0   },
+  "Snacks salados":             { cat:'Carb. refinados', medida:'porción',    equiv:'1 bolsita ~30g',                cal:150, prot:2,  carb:18, grasa:8,  grasa_sat:3,   grasa_insat:5   },
+  "Tubérculos fritos":          { cat:'Carb. refinados', medida:'porción',    equiv:'1 porción ~100g',               cal:300, prot:3,  carb:35, grasa:16, grasa_sat:4,   grasa_insat:12  },
+  "Chocolate":                  { cat:'Carb. refinados', medida:'porción',    equiv:'2 cuadros ~20g',                cal:110, prot:1,  carb:12, grasa:7,  grasa_sat:4,   grasa_insat:3   },
+  "Helado":                     { cat:'Carb. refinados', medida:'porción',    equiv:'1 bocha ~100g',                 cal:200, prot:3,  carb:24, grasa:10, grasa_sat:6,   grasa_insat:4   },
+  // Grasas
+  "Aceite de oliva (crudo)":    { cat:'Grasas',          medida:'cucharada',  equiv:'1 cda ~10ml',                   cal:90,  prot:0,  carb:0,  grasa:10, grasa_sat:1.5, grasa_insat:8.5 },
+  "Aceite de oliva (frito)":    { cat:'Grasas',          medida:'cucharada',  equiv:'1 cda ~10ml',                   cal:90,  prot:0,  carb:0,  grasa:10, grasa_sat:3.5, grasa_insat:6.5 },
+  "Aceite de girasol (crudo)":  { cat:'Grasas',          medida:'cucharada',  equiv:'1 cda ~10ml',                   cal:90,  prot:0,  carb:0,  grasa:10, grasa_sat:1,   grasa_insat:9   },
+  "Aceite de girasol (frito)":  { cat:'Grasas',          medida:'cucharada',  equiv:'1 cda ~10ml',                   cal:90,  prot:0,  carb:0,  grasa:10, grasa_sat:2.5, grasa_insat:7.5 },
+  "Mantequilla (cruda)":        { cat:'Grasas',          medida:'cucharada',  equiv:'1 cda ~10g',                    cal:72,  prot:0,  carb:0,  grasa:8,  grasa_sat:5,   grasa_insat:3   },
+  "Mantequilla (frita)":        { cat:'Grasas',          medida:'cucharada',  equiv:'1 cda ~10g',                    cal:72,  prot:0,  carb:0,  grasa:8,  grasa_sat:6,   grasa_insat:2   },
+  "Mayonesa":                   { cat:'Grasas',          medida:'cucharada',  equiv:'1 cda ~15g',                    cal:100, prot:0,  carb:0,  grasa:11, grasa_sat:2,   grasa_insat:9   },
+  "Palta":                      { cat:'Grasas',          medida:'porción',    equiv:'½ palta mediana ~80g',          cal:130, prot:1,  carb:7,  grasa:12, grasa_sat:2,   grasa_insat:10  },
+  "Frutos secos":               { cat:'Grasas',          medida:'porción',    equiv:'1 puñado ~30g',                 cal:180, prot:5,  carb:6,  grasa:16, grasa_sat:2,   grasa_insat:14  },
+  // Verduras
+  "Hojas verdes":               { cat:'Verduras',        medida:'porción',    equiv:'1 taza 250ml',                  cal:20,  prot:2,  carb:3,  grasa:0,  grasa_sat:0,   grasa_insat:0   },
+  "Brócoli":                    { cat:'Verduras',        medida:'porción',    equiv:'1 taza 250ml',                  cal:55,  prot:4,  carb:11, grasa:0,  grasa_sat:0,   grasa_insat:0   },
+  "Tomate":                     { cat:'Verduras',        medida:'unidad',     equiv:'1 tomate mediano ~120g',        cal:22,  prot:1,  carb:5,  grasa:0,  grasa_sat:0,   grasa_insat:0   },
+  "Zanahoria":                  { cat:'Verduras',        medida:'unidad',     equiv:'1 zanahoria mediana ~80g',      cal:35,  prot:1,  carb:8,  grasa:0,  grasa_sat:0,   grasa_insat:0   },
+  "Cebolla":                    { cat:'Verduras',        medida:'porción',    equiv:'½ taza picada ~80g',            cal:32,  prot:1,  carb:7,  grasa:0,  grasa_sat:0,   grasa_insat:0   },
+  "Betarraga":                  { cat:'Verduras',        medida:'porción',    equiv:'½ taza cocida ~85g',            cal:37,  prot:1,  carb:8,  grasa:0,  grasa_sat:0,   grasa_insat:0   },
+  "Espárragos":                 { cat:'Verduras',        medida:'porción',    equiv:'6 tallos medianos ~90g',        cal:20,  prot:2,  carb:4,  grasa:0,  grasa_sat:0,   grasa_insat:0   },
+  "Alcachofa":                  { cat:'Verduras',        medida:'unidad',     equiv:'1 alcachofa mediana ~120g',     cal:60,  prot:4,  carb:13, grasa:0,  grasa_sat:0,   grasa_insat:0   },
+  "Champiñones":                { cat:'Verduras',        medida:'porción',    equiv:'1 taza laminados ~90g',         cal:20,  prot:3,  carb:3,  grasa:0,  grasa_sat:0,   grasa_insat:0   },
+  "Holantao":                   { cat:'Verduras',        medida:'porción',    equiv:'1 taza ~90g',                   cal:35,  prot:2,  carb:6,  grasa:0,  grasa_sat:0,   grasa_insat:0   },
+  // Frutas
+  "Plátano":                    { cat:'Frutas',          medida:'unidad',     equiv:'1 plátano mediano ~120g',       cal:105, prot:1,  carb:27, grasa:0,  grasa_sat:0,   grasa_insat:0   },
+  "Manzana":                    { cat:'Frutas',          medida:'unidad',     equiv:'1 manzana mediana ~180g',       cal:95,  prot:0,  carb:25, grasa:0,  grasa_sat:0,   grasa_insat:0   },
+  "Arándanos":                  { cat:'Frutas',          medida:'porción',    equiv:'1 taza 250ml',                  cal:85,  prot:1,  carb:21, grasa:0,  grasa_sat:0,   grasa_insat:0   },
+  "Fresa":                      { cat:'Frutas',          medida:'porción',    equiv:'1 taza 250ml',                  cal:50,  prot:1,  carb:12, grasa:0,  grasa_sat:0,   grasa_insat:0   },
+  "Granadilla":                 { cat:'Frutas',          medida:'unidad',     equiv:'1 granadilla ~50g pulpa',       cal:45,  prot:1,  carb:11, grasa:0,  grasa_sat:0,   grasa_insat:0   },
+  "Piña":                       { cat:'Frutas',          medida:'porción',    equiv:'1 taza 250ml',                  cal:80,  prot:1,  carb:21, grasa:0,  grasa_sat:0,   grasa_insat:0   },
+  "Papaya":                     { cat:'Frutas',          medida:'porción',    equiv:'1 taza 250ml',                  cal:55,  prot:1,  carb:14, grasa:0,  grasa_sat:0,   grasa_insat:0   },
+  "Uvas":                       { cat:'Frutas',          medida:'porción',    equiv:'1 taza 250ml ~150g',            cal:100, prot:1,  carb:27, grasa:0,  grasa_sat:0,   grasa_insat:0   },
+  "Mango":                      { cat:'Frutas',          medida:'porción',    equiv:'1 taza 250ml ~165g',            cal:100, prot:1,  carb:25, grasa:1,  grasa_sat:0,   grasa_insat:1   },
+  "Mandarina":                  { cat:'Frutas',          medida:'unidad',     equiv:'1 mandarina mediana ~75g',      cal:40,  prot:1,  carb:10, grasa:0,  grasa_sat:0,   grasa_insat:0   },
+  "Ciruela":                    { cat:'Frutas',          medida:'unidad',     equiv:'1 ciruela mediana ~65g',        cal:30,  prot:0,  carb:8,  grasa:0,  grasa_sat:0,   grasa_insat:0   },
+  "Higos":                      { cat:'Frutas',          medida:'unidad',     equiv:'1 higo mediano ~50g',           cal:37,  prot:0,  carb:10, grasa:0,  grasa_sat:0,   grasa_insat:0   },
+  // Bebidas
+  "Vino":                       { cat:'Bebidas',         medida:'porción',    equiv:'1 copa ~150ml',                 cal:125, prot:0,  carb:4,  grasa:0,  grasa_sat:0,   grasa_insat:0   },
+  "Cerveza":                    { cat:'Bebidas',         medida:'porción',    equiv:'1 lata/botella ~355ml',         cal:150, prot:1,  carb:13, grasa:0,  grasa_sat:0,   grasa_insat:0   },
+  "Destilados (pisco/whisky)":  { cat:'Bebidas',         medida:'porción',    equiv:'1 medida ~45ml',                cal:105, prot:0,  carb:0,  grasa:0,  grasa_sat:0,   grasa_insat:0   },
+  "Gaseosa":                    { cat:'Bebidas',         medida:'porción',    equiv:'1 vaso 250ml',                  cal:105, prot:0,  carb:27, grasa:0,  grasa_sat:0,   grasa_insat:0   },
+  "Gaseosa light":              { cat:'Bebidas',         medida:'porción',    equiv:'1 vaso 250ml',                  cal:5,   prot:0,  carb:1,  grasa:0,  grasa_sat:0,   grasa_insat:0   },
+};
+
+const FOOD_NAMES = Object.keys(FOODS_DB);
+
+const LABELS = {
+  1:"Hambre extrema — mareos posibles",2:"Muy hambriento — urgencia alta",
+  3:"Hambre moderada — buen momento",4:"Algo de hambre — también buen momento",
+  5:"Neutral — sin hambre ni saciedad",6:"Levemente satisfecho",
+  7:"Satisfecho cómodamente — ideal",8:"Bastante lleno — zona de exceso",
+  9:"Muy lleno — incómodo",10:"Lleno en exceso — malestar"
+};
+
+const DURATION_RANGES = {
+  Desayuno:[{max:5,label:"Muy rápido",color:"#e8776a"},{max:8,label:"Adecuado",color:"#f4c063"},{max:12,label:"Óptimo",color:"#7ecba1"},{max:15,label:"Ideal",color:"#6ec6e6"}],
+  Almuerzo:[{max:10,label:"Muy rápido",color:"#e8776a"},{max:15,label:"Adecuado",color:"#f4c063"},{max:20,label:"Óptimo",color:"#7ecba1"},{max:25,label:"Ideal",color:"#6ec6e6"}],
+  Cena:[{max:8,label:"Muy rápido",color:"#e8776a"},{max:12,label:"Adecuado",color:"#f4c063"},{max:18,label:"Óptimo",color:"#7ecba1"},{max:22,label:"Ideal",color:"#6ec6e6"}]
+};
+
+const MAIN_MEALS = ['Desayuno','Almuerzo','Cena'];
+let selectedMeal='', selectedDist='', rowCounter=0;
+
+function loadEntries() { try { return JSON.parse(localStorage.getItem(LS_KEY)||'[]'); } catch { return []; } }
+function saveEntries(e) { localStorage.setItem(LS_KEY, JSON.stringify(e)); }
+
+function calcNutrition(foodItems) {
+  let cal=0,prot=0,carb=0,grasa=0,grasa_sat=0,grasa_insat=0;
+  (foodItems||[]).forEach(f=>{
+    const db=FOODS_DB[f.food]; if(!db)return;
+    const qty=parseFloat(f.qty)||0;
+    cal+=db.cal*qty; prot+=db.prot*qty; carb+=db.carb*qty; grasa+=db.grasa*qty;
+    grasa_sat+=(db.grasa_sat||0)*qty; grasa_insat+=(db.grasa_insat||0)*qty;
+  });
+  return {cal:Math.round(cal),prot:Math.round(prot),carb:Math.round(carb),grasa:Math.round(grasa),grasa_sat:Math.round(grasa_sat*10)/10,grasa_insat:Math.round(grasa_insat*10)/10};
+}
+
+function autoExportJSON(entries) {
+  const date=new Date().toISOString().slice(0,10);
+  const blob=new Blob([JSON.stringify(entries,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a'); a.href=url; a.download=`slowbite_${date}.json`; a.click();
+  URL.revokeObjectURL(url);
+  document.getElementById('backup-label').textContent=`respaldo ${date}`;
+}
+
+function exportJSON() {
+  const entries=loadEntries();
+  if(!entries.length){showToast('No hay entradas');return;}
+  autoExportJSON(entries);
+}
+
+function importJSON() { document.getElementById('importFile').click(); }
+
+function handleImport(e) {
+  const file=e.target.files[0]; if(!file)return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    try {
+      const data=JSON.parse(ev.target.result);
+      if(!Array.isArray(data))throw new Error();
+      saveEntries(data); showToast(`✓ ${data.length} entradas importadas`); renderHistorial();
+    } catch { showToast('Error al leer el archivo'); }
+  };
+  reader.readAsText(file); e.target.value='';
+}
+
+function selectMeal(meal) {
+  selectedMeal=meal;
+  document.querySelectorAll('.meal-btn').forEach(b=>b.classList.remove('selected'));
+  document.getElementById('btn-'+meal.replace(' ','')).classList.add('selected');
+  updateDurationSlider();
+}
+
+function isMainMeal() { return MAIN_MEALS.includes(selectedMeal); }
+
+function sliderColor(v) {
+  if(v<=2)return'#e8776a'; if(v<=4)return'#f4c063'; if(v<=7)return'#7ecba1'; if(v<=8)return'#f4c063'; return'#e8776a';
+}
+
+function updateSlider(id) {
+  const v=parseInt(document.getElementById(id).value);
+  const p=id==='before'?'b':'a';
+  document.getElementById(p+'-num').textContent=v;
+  document.getElementById(p+'-num').style.color=sliderColor(v);
+  document.getElementById(p+'-desc').textContent=LABELS[v];
+  const pct=((v-1)/9)*100;
+  document.getElementById(id).style.background=`linear-gradient(to right,${sliderColor(v)} ${pct}%,rgba(255,255,255,0.1) ${pct}%)`;
+}
+
+function getDurationColor(val) {
+  if(!isMainMeal())return'var(--hint)';
+  const r=DURATION_RANGES[selectedMeal]; for(const x of r){if(val<=x.max)return x.color;} return r[r.length-1].color;
+}
+function getDurationLabel(val) {
+  if(!isMainMeal())return'';
+  const r=DURATION_RANGES[selectedMeal]; for(const x of r){if(val<=x.max)return x.label;} return r[r.length-1].label;
+}
+
+function updateDurationSlider() {
+  const slider=document.getElementById('duration');
+  const numEl=document.getElementById('d-num'),descEl=document.getElementById('d-desc');
+  const minEl=document.getElementById('dur-min'),maxEl=document.getElementById('dur-max');
+  if(!isMainMeal()){
+    slider.disabled=true; numEl.style.color='var(--hint)'; numEl.textContent='—';
+    descEl.textContent=''; minEl.textContent=''; maxEl.textContent='';
+    slider.style.background='rgba(255,255,255,0.08)'; return;
+  }
+  slider.disabled=false;
+  const ranges=DURATION_RANGES[selectedMeal];
+  slider.max=ranges[ranges.length-1].max+3; slider.min=1;
+  minEl.textContent='1 min'; maxEl.textContent=ranges[ranges.length-1].max+'+ min';
+  updateDuration();
+}
+
+function updateDuration() {
+  const slider=document.getElementById('duration'),val=parseInt(slider.value);
+  const color=getDurationColor(val);
+  document.getElementById('d-num').textContent=val+' min';
+  document.getElementById('d-num').style.color=color;
+  document.getElementById('d-desc').textContent=getDurationLabel(val);
+  const pct=((val-1)/(parseInt(slider.max)-1))*100;
+  slider.style.background=`linear-gradient(to right,${color} ${pct}%,rgba(255,255,255,0.1) ${pct}%)`;
+}
+
+function selectDist(level) {
+  selectedDist=level;
+  document.querySelectorAll('.dist-btn').forEach(b=>b.classList.remove('selected-green','selected-amber','selected-red'));
+  const map={low:'selected-green',mod:'selected-amber',high:'selected-red'};
+  document.getElementById('dist-'+level).classList.add(map[level]);
+}
+
+function addFoodRow() {
+  const id=++rowCounter;
+  const row=document.createElement('div');
+  row.className='food-item-row'; row.id='row-'+id;
+  row.innerHTML=`
+    <div style="flex:1;">
+      <div class="food-search-wrap">
+        <input type="text" placeholder="buscar alimento..." id="fi-${id}" oninput="filterFoods(${id})" onblur="hideList(${id})" autocomplete="off">
+        <div class="autocomplete-list" id="fl-${id}" style="display:none;"></div>
+      </div>
+      <div id="hint-${id}" style="font-size:11px;color:var(--hint);margin-top:4px;padding-left:2px;min-height:14px;"></div>
+    </div>
+    <input type="number" class="grams-input" id="gr-${id}" placeholder="cant." min="0.1" step="0.5" style="width:64px;">
+    <button class="del-row-btn" onclick="document.getElementById('row-${id}').remove()">×</button>`;
+  document.getElementById('food-items').appendChild(row);
+  document.getElementById('fi-'+id).focus();
+}
+
+function filterFoods(id) {
+  const q=document.getElementById('fi-'+id).value.toLowerCase().trim();
+  const list=document.getElementById('fl-'+id);
+  if(!q){list.style.display='none';return;}
+  const matches=FOOD_NAMES.filter(f=>f.toLowerCase().includes(q)).slice(0,8);
+  if(!matches.length){list.style.display='none';return;}
+  list.innerHTML=matches.map(f=>{
+    const hl=f.replace(new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'gi'),m=>`<strong>${m}</strong>`);
+    return `<div class="ac-item" onmousedown="selectFood(${id},'${f.replace(/'/g,"\\'")}')">${hl}</div>`;
+  }).join('');
+  list.style.display='block';
+}
+
+function selectFood(id,food) {
+  const inp=document.getElementById('fi-'+id);
+  inp.value=food; inp.classList.add('confirmed');
+  document.getElementById('fl-'+id).style.display='none';
+  const db=FOODS_DB[food];
+  if(db) document.getElementById('hint-'+id).textContent=`1 ${db.medida} = ${db.equiv} · ${db.cal} kcal`;
+  document.getElementById('gr-'+id).focus();
+}
+
+function hideList(id) { setTimeout(()=>{const l=document.getElementById('fl-'+id);if(l)l.style.display='none';},150); }
+
+function getFoodItems() {
+  const items=[];
+  document.querySelectorAll('.food-item-row').forEach(row=>{
+    const id=row.id.replace('row-','');
+    const food=(document.getElementById('fi-'+id)?.value||'').trim();
+    const qty=(document.getElementById('gr-'+id)?.value||'').trim();
+    if(food)items.push({food,qty});
+  });
+  return items;
+}
+
+function getPill(b,a) {
+  if(b>=3&&b<=4&&a>=6&&a<=7)return'<span class="pill pill-green">Óptimo</span>';
+  if(b<=2||a>=8)return'<span class="pill pill-red">Alerta</span>';
+  return'<span class="pill pill-amber">Mejorable</span>';
+}
+
+const distLabel={low:'Distr. baja',mod:'Distr. moderada',high:'Distr. alta'};
+const distColor={low:'var(--green)',mod:'var(--amber)',high:'var(--red)'};
+
+function addEntry() {
+  if(!selectedMeal){showToast('Selecciona una comida');return;}
+  if(!selectedDist){showToast('Selecciona el nivel de distracción');return;}
+  const before=parseInt(document.getElementById('before').value);
+  const after=parseInt(document.getElementById('after').value);
+  const duration=isMainMeal()?parseInt(document.getElementById('duration').value):null;
+  const durationLabel=isMainMeal()?getDurationLabel(duration):null;
+  const context=document.getElementById('context').value.trim();
+  const prevNotes=document.getElementById('prev-notes').value.trim();
+  const foodItems=getFoodItems();
+  const nutrition=calcNutrition(foodItems);
+  const now=new Date();
+  const manualTime=document.getElementById('inputTime').value;
+  const entry={
+    id:Date.now(),meal:selectedMeal,foodItems,nutrition,before,after,
+    duration,durationLabel,distraction:selectedDist,context,prevNotes,
+    isMain:isMainMeal(),
+    date:now.toLocaleDateString('es-PE'),
+    time:manualTime || now.toLocaleTimeString('es',{hour:'2-digit',minute:'2-digit'}),
+    ts:now.getTime()
+  };
+  const entries=loadEntries();
+  entries.unshift(entry);
+  saveEntries(entries);
+  selectedMeal=''; selectedDist='';
+  document.querySelectorAll('.meal-btn').forEach(b=>b.classList.remove('selected'));
+  document.querySelectorAll('.dist-btn').forEach(b=>b.classList.remove('selected-green','selected-amber','selected-red'));
+  document.getElementById('food-items').innerHTML='';
+  document.getElementById('inputTime').value='';
+  document.getElementById('context').value='';
+  document.getElementById('prev-notes').value='';
+  document.getElementById('before').value=3; document.getElementById('after').value=7;
+  document.getElementById('duration').value=10; rowCounter=0;
+  updateSlider('before'); updateSlider('after'); updateDurationSlider();
+  showToast('Entrada guardada');
+  if(entries.length % 20 === 0) autoExportJSON(entries);
+}
+
+function renderHistorial() {
+  const entries=loadEntries();
+  const el=document.getElementById('entries-list');
+  document.getElementById('entry-count').textContent=entries.length?`${entries.length} entrada${entries.length>1?'s':''}`:'';
+  if(!entries.length){el.innerHTML=`<div class="empty-state"><div class="big">🍽</div><p>Aún no tienes registros.</p></div>`;return;}
+  let html='',lastDate='';
+  entries.forEach(e=>{
+    if(e.date!==lastDate){html+=`<div class="section-label" style="margin-top:${lastDate?'20px':'4px'};">${e.date}</div>`;lastDate=e.date;}
+    const foods=(e.foodItems||[]);
+    const dbUnit=f=>{const d=FOODS_DB[f.food];return d?`${f.qty} ${d.medida}`:f.qty||'—';};
+    const foodsHtml=foods.length?`<div class="entry-foods">${foods.map(f=>`<div class="entry-food-row"><span>${f.food}</span><span class="entry-food-g">${dbUnit(f)}</span></div>`).join('')}</div>`:'';
+    const nutr=e.nutrition||calcNutrition(foods);
+    const nutrHtml=nutr.cal>0?`<div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:8px;font-size:12px;color:var(--muted);"><span style="color:var(--amber);font-weight:500;">${nutr.cal} kcal</span><span>P: ${nutr.prot}g</span><span>C: ${nutr.carb}g</span><span>G: ${nutr.grasa}g</span></div>`:'';
+    let metaTags='';
+    if(e.duration)metaTags+=`<span class="entry-meta-tag">${e.duration} min — ${e.durationLabel||''}</span>`;
+    if(e.distraction)metaTags+=`<span class="entry-meta-tag" style="color:${distColor[e.distraction]||'var(--hint)'};">${distLabel[e.distraction]||''}</span>`;
+    const notesHtml=(e.context||e.prevNotes)?`<div class="entry-notes">${e.context?`<div>${e.context}</div>`:''}${e.prevNotes?`<div style="margin-top:4px;color:var(--hint);">Anterior: ${e.prevNotes}</div>`:''}</div>`:'';
+    html+=`<div class="entry-card"><div class="entry-top"><div><div class="entry-meal">${e.meal}</div><div class="entry-time">${e.time}</div></div><div style="display:flex;align-items:center;gap:8px;">${getPill(e.before,e.after)}<button class="entry-del" onclick="deleteEntry(${e.id})">×</button></div></div>${foodsHtml}${nutrHtml}<div class="entry-bars"><div class="bar-block"><label>Entré con hambre</label><div class="bar-val" style="color:${sliderColor(e.before)}">${e.before} — ${LABELS[e.before]}</div><div class="mini-bar-bg"><div class="mini-bar" style="width:${Math.round(e.before/10*100)}%;background:${sliderColor(e.before)};"></div></div></div><div class="bar-block"><label>Salí con saciedad</label><div class="bar-val" style="color:${sliderColor(e.after)}">${e.after} — ${LABELS[e.after]}</div><div class="mini-bar-bg"><div class="mini-bar" style="width:${Math.round(e.after/10*100)}%;background:${sliderColor(e.after)};"></div></div></div></div>${metaTags?`<div class="entry-meta">${metaTags}</div>`:''}${notesHtml}</div>`;
+  });
+  el.innerHTML=html;
+}
+
+function deleteEntry(id) {
+  if(!confirm('¿Eliminar esta entrada?'))return;
+  saveEntries(loadEntries().filter(e=>e.id!==id));
+  renderHistorial();
+  showToast('Entrada eliminada');
+}
+
+function renderProgreso() {
+  const entries = loadEntries();
+  const el = document.getElementById('stats-content');
+  if(!entries.length){el.innerHTML=`<div class="empty-state"><div class="big">📊</div><p>Agrega algunas entradas para ver tu progreso aquí.</p></div>`;return;}
+
+  // ── CICLOS ────────────────────────────────────────────────────────────
+  // Un ciclo es el conjunto cronológico más reciente D→A→C,
+  // sin importar si cruzan días calendario.
+  // Se busca hacia atrás en el tiempo: el último Cena, luego el Almuerzo
+  // anterior a esa Cena, luego el Desayuno anterior a ese Almuerzo.
+
+  // Todas las entradas principales ordenadas por timestamp descendente
+  const mainEntries = entries
+    .filter(e => ['Desayuno','Almuerzo','Cena'].includes(e.meal))
+    .sort((a,b) => b.ts - a.ts);
+
+  // Construir ciclos completos: buscar tríos D < A < C en orden cronológico
+  const completeCycles = [];
+  const usedIds = new Set();
+
+  for(let i = 0; i < mainEntries.length; i++) {
+    const cena = mainEntries[i];
+    if(cena.meal !== 'Cena' || usedIds.has(cena.id)) continue;
+
+    // Buscar el Almuerzo más reciente anterior a esta Cena
+    const almuerzo = mainEntries.find(e =>
+      e.meal === 'Almuerzo' && e.ts < cena.ts && !usedIds.has(e.id)
+    );
+    if(!almuerzo) continue;
+
+    // Buscar el Desayuno más reciente anterior a ese Almuerzo
+    const desayuno = mainEntries.find(e =>
+      e.meal === 'Desayuno' && e.ts < almuerzo.ts && !usedIds.has(e.id)
+    );
+    if(!desayuno) continue;
+
+    // Ciclo válido — guardarlo con sus 3 entradas + todas las entradas del rango temporal
+    usedIds.add(cena.id); usedIds.add(almuerzo.id); usedIds.add(desayuno.id);
+
+    // Incluir snacks que caigan dentro del rango D→C
+    const cycleEntries = entries.filter(e =>
+      e.ts >= desayuno.ts && e.ts <= cena.ts
+    );
+
+    // Etiqueta del ciclo: fecha del desayuno → fecha de la cena
+    const label = desayuno.date === cena.date
+      ? desayuno.date
+      : `${desayuno.date} → ${cena.date}`;
+
+    completeCycles.push({ label, desayuno, almuerzo, cena, entries: cycleEntries });
+  }
+
+  // Calcular nutrición de un ciclo (suma de sus entradas principales D+A+C)
+  // cyclenutr suma D + A + C + snacks dentro del rango temporal del ciclo
+  const cyclenutr = cycle => {
+    return cycle.entries.reduce((acc, e) => {
+      const n = e.nutrition || calcNutrition(e.foodItems || []);
+      acc.cal += n.cal; acc.prot += n.prot; acc.carb += n.carb;
+      acc.grasa += (n.grasa || 0); acc.grasa_insat += (n.grasa_insat || 0);
+      return acc;
+    }, {cal:0, prot:0, carb:0, grasa:0, grasa_insat:0});
+  };
+
+  const lastCycle = completeCycles[0] || null;
+  const last7 = completeCycles.slice(0, 7);
+
+  // Referencias
+  const REF = { calMin:2100,calMax:2200, tdee:2550, protMin:130,protMax:145, carbMin:220,carbMax:250, grasaMin:60,grasaMax:70 };
+
+  // Indicador visual
+  const ind = (val, min, max) => {
+    const lo = min*0.8, hi = max*1.2;
+    if(val>=min&&val<=max) return `<span style="color:var(--green);font-weight:600;">✓</span>`;
+    if(val>max&&val<=max*1.2) return `<span style="color:var(--amber);">↑</span>`;
+    if(val<min&&val>=min*0.8) return `<span style="color:var(--amber);">↓</span>`;
+    return `<span style="color:var(--red);">⚠</span>`;
+  };
+
+  // Barra de progreso con rango objetivo
+  const bar = (val, min, max, maxScale) => {
+    const scale = maxScale || max*1.5;
+    const pctVal = Math.min(val/scale*100,100);
+    const pctMin = min/scale*100;
+    const pctMax = Math.min(max/scale*100,100);
+    const color = val>=min&&val<=max?'var(--green)':val>max*1.2||val<min*0.8?'var(--red)':'var(--amber)';
+    return `<div style="position:relative;height:6px;background:rgba(255,255,255,0.08);border-radius:3px;margin:4px 0 2px;">
+      <div style="position:absolute;left:${pctMin}%;width:${pctMax-pctMin}%;height:100%;background:rgba(126,203,161,0.2);border-radius:3px;"></div>
+      <div style="position:absolute;left:0;width:${pctVal}%;height:100%;background:${color};border-radius:3px;transition:width 0.4s;"></div>
+    </div>`;
+  };
+
+  // Fila de métrica
+  const metaRow = (label, val, unit, min, max, maxScale) => `
+    <div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);">
+      <div style="flex:1;">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:2px;">
+          <span style="font-size:13px;color:var(--muted);">${label}</span>
+          <span style="font-size:13px;color:var(--hint);">ref ${min}–${max}${unit}</span>
+        </div>
+        ${bar(val,min,max,maxScale)}
+      </div>
+      <span style="font-size:15px;font-weight:500;min-width:52px;text-align:right;">${val}${unit}</span>
+      <span style="font-size:16px;min-width:20px;text-align:center;">${ind(val,min,max)}</span>
+    </div>`;
+
+  // Mini gráfico de tendencia 7 ciclos
+  const trendChart = (cycles, fn, refMin, refMax, maxVal, colorFn) => {
+    if(!cycles.length) return '';
+    const vals = cycles.map(fn).reverse(); // cronológico
+    const W=260, H=60, pad={t:8,r:8,b:18,l:8};
+    const cW=W-pad.l-pad.r, cH=H-pad.t-pad.b;
+    const scale = maxVal||Math.max(...vals,refMax)*1.1;
+    const x=i=>pad.l+i/(vals.length-1||1)*cW;
+    const y=v=>pad.t+cH-(v/scale)*cH;
+    const pMin=pad.t+cH-(refMin/scale)*cH;
+    const pMax=pad.t+cH-(refMax/scale)*cH;
+    let path=vals.map((v,i)=>`${i===0?'M':'L'}${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(' ');
+    let dots=vals.map((v,i)=>`<circle cx="${x(i).toFixed(1)}" cy="${y(v).toFixed(1)}" r="3" fill="${colorFn?colorFn(v,refMin,refMax):'var(--accent)'}"/>`).join('');
+    return `<svg width="100%" viewBox="0 0 ${W} ${H}" style="overflow:visible;">
+      <rect x="${pad.l}" y="${pMax.toFixed(1)}" width="${cW}" height="${(pMin-pMax).toFixed(1)}" fill="rgba(126,203,161,0.12)" rx="2"/>
+      <path d="${path}" fill="none" stroke="var(--accent)" stroke-width="1.5" stroke-linejoin="round"/>
+      ${dots}
+    </svg>`;
+  };
+
+  const calColor = (v,mn,mx)=>v>=mn&&v<=mx?'#7ecba1':v>mx*1.2||v<mn*0.8?'#e8776a':'#f4c063';
+
+  // ── BLOQUE 1 — DÉFICIT CALÓRICO ───────────────────────────────────────
+  let bloque1 = `<div class="section-label" style="margin-top:0;">Déficit calórico</div>`;
+
+  if(!lastCycle) {
+    bloque1 += `<div style="font-size:13px;color:var(--hint);padding:12px 0;">Sin ciclos completos aún (necesitas Desayuno → Almuerzo → Cena en orden cronológico).</div>`;
+  } else {
+    const lcn = cyclenutr(lastCycle);
+    const deficit = REF.tdee - lcn.cal;
+    const avg7cal = last7.length ? Math.round(last7.reduce((s,c)=>s+cyclenutr(c).cal,0)/last7.length) : 0;
+    const avgDeficit = REF.tdee - avg7cal;
+
+    bloque1 += `<div class="form-card" style="padding:14px;">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;">
+        <span style="font-size:13px;color:var(--muted);">Último ciclo (${lastCycle.label})</span>
+        <span style="font-size:13px;color:var(--hint);">ref 2,100–2,200 kcal</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+        <span style="font-size:22px;font-family:'DM Serif Display',serif;color:var(--amber);">${lcn.cal}</span>
+        <span style="font-size:13px;color:var(--muted);">kcal ingeridas</span>
+        <span style="margin-left:auto;font-size:16px;">${ind(lcn.cal,REF.calMin,REF.calMax)}</span>
+      </div>
+      ${bar(lcn.cal,REF.calMin,REF.calMax,REF.tdee)}
+      <div style="font-size:12px;color:var(--hint);margin-top:6px;">Déficit estimado: <strong style="color:var(--green);">${deficit>0?'+':''}${deficit} kcal</strong> vs TDEE ${REF.tdee}</div>
+    </div>`;
+
+    if(last7.length>1) {
+      bloque1 += `<div class="form-card" style="padding:14px;">
+        <div style="font-size:12px;color:var(--hint);margin-bottom:8px;">Tendencia últimos ${last7.length} ciclos</div>
+        ${trendChart(last7,c=>cyclenutr(c).cal,REF.calMin,REF.calMax,REF.tdee,calColor)}
+        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:10px;">
+          <div>
+            <span style="font-size:13px;color:var(--muted);">Promedio: </span>
+            <span style="font-size:15px;font-weight:500;color:var(--amber);">${avg7cal} kcal</span>
+            <span style="font-size:14px;margin-left:6px;">${ind(avg7cal,REF.calMin,REF.calMax)}</span>
+          </div>
+          <span style="font-size:12px;color:var(--hint);">Déficit prom: <strong style="color:var(--green);">${avgDeficit>0?'+':''}${avgDeficit}</strong></span>
+        </div>
+      </div>`;
+    }
+  }
+
+  // ── BLOQUE 2 — APORTE NUTRICIONAL ────────────────────────────────────
+  let bloque2 = `<div class="section-label">Aporte nutricional</div>`;
+
+  if(!lastCycle) {
+    bloque2 += `<div style="font-size:13px;color:var(--hint);padding-bottom:12px;">Sin ciclos completos aún.</div>`;
+  } else {
+    const lcn = cyclenutr(lastCycle);
+    bloque2 += `<div class="form-card" style="padding:14px;">
+      <div style="font-size:12px;color:var(--hint);margin-bottom:4px;">Último ciclo</div>
+      ${metaRow('Proteína',lcn.prot,'g',REF.protMin,REF.protMax)}
+      ${metaRow('Carbohidratos',lcn.carb,'g',REF.carbMin,REF.carbMax)}
+      ${metaRow('Grasa saludable',Math.round(lcn.grasa_insat),'g',REF.grasaMin,REF.grasaMax)}
+      ${metaRow('Calorías',lcn.cal,'kcal',REF.calMin,REF.calMax,REF.tdee)}
+    </div>`;
+
+    if(last7.length>1) {
+      const avg = last7.reduce((acc,c)=>{
+        const n=cyclenutr(c);
+        acc.cal+=n.cal; acc.prot+=n.prot; acc.carb+=n.carb; acc.gi+=n.grasa_insat; return acc;
+      },{cal:0,prot:0,carb:0,gi:0});
+      const n7=last7.length;
+      bloque2 += `<div class="form-card" style="padding:14px;">
+        <div style="font-size:12px;color:var(--hint);margin-bottom:4px;">Promedio ${n7} ciclos</div>
+        ${metaRow('Proteína',Math.round(avg.prot/n7),'g',REF.protMin,REF.protMax)}
+        ${metaRow('Carbohidratos',Math.round(avg.carb/n7),'g',REF.carbMin,REF.carbMax)}
+        ${metaRow('Grasa saludable',Math.round(avg.gi/n7),'g',REF.grasaMin,REF.grasaMax)}
+        ${metaRow('Calorías',Math.round(avg.cal/n7),'kcal',REF.calMin,REF.calMax,REF.tdee)}
+      </div>`;
+    }
+  }
+
+  // ── BLOQUE 3 — HAMBRE Y SACIEDAD ─────────────────────────────────────
+  let bloque3 = `<div class="section-label">Hambre y saciedad</div>`;
+
+  if(!lastCycle) {
+    bloque3 += `<div style="font-size:13px;color:var(--hint);padding-bottom:12px;">Sin ciclos completos aún.</div>`;
+  } else {
+    const mainMealsLC = [lastCycle.desayuno, lastCycle.almuerzo, lastCycle.cena].filter(Boolean);
+
+    const indHS = (v,mn,mx) => {
+      if(v>=mn&&v<=mx) return `<span style="color:var(--green);">✓</span>`;
+      if(v>mx) return `<span style="color:var(--amber);">↑</span>`;
+      return `<span style="color:var(--amber);">↓</span>`;
+    };
+
+    let tableRows = mainMealsLC.map(e=>`
+      <div style="display:grid;grid-template-columns:80px 1fr 1fr;gap:6px;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;align-items:center;">
+        <span style="color:var(--muted);">${e.meal}</span>
+        <span style="color:${sliderColor(e.before)};">${e.before}/10 ${indHS(e.before,3,4)}</span>
+        <span style="color:${sliderColor(e.after)};">${e.after}/10 ${indHS(e.after,6,7)}</span>
+      </div>`).join('');
+
+    bloque3 += `<div class="form-card" style="padding:14px;">
+      <div style="font-size:12px;color:var(--hint);margin-bottom:4px;">Último ciclo — por comida</div>
+      <div style="display:grid;grid-template-columns:80px 1fr 1fr;gap:6px;padding:4px 0;font-size:11px;color:var(--hint);">
+        <span></span><span>Hambre al entrar</span><span>Saciedad al salir</span>
+      </div>
+      ${tableRows}
+    </div>`;
+
+    // Promedios 7 ciclos
+    if(last7.length>=1) {
+      const allMain = last7.flatMap(c=>[c.desayuno, c.almuerzo, c.cena].filter(Boolean));
+      const n7m = allMain.length;
+      const avgBef = n7m?+(allMain.reduce((s,e)=>s+e.before,0)/n7m).toFixed(1):0;
+      const avgAft = n7m?+(allMain.reduce((s,e)=>s+e.after,0)/n7m).toFixed(1):0;
+      const optimal7 = allMain.filter(e=>e.before>=3&&e.before<=4&&e.after>=6&&e.after<=7).length;
+      const highDist = allMain.filter(e=>e.distraction==='high').length;
+      const longMeals = allMain.filter(e=>e.duration&&e.duration>=20).length;
+
+      // Gráfico doble línea hambre/saciedad
+      const cycleAvgBef = last7.map(c=>{
+        const m=[c.desayuno,c.almuerzo,c.cena].filter(Boolean);
+        return m.length?+(m.reduce((s,e)=>s+e.before,0)/m.length).toFixed(1):0;
+      }).reverse();
+      const cycleAvgAft = last7.map(c=>{
+        const m=[c.desayuno,c.almuerzo,c.cena].filter(Boolean);
+        return m.length?+(m.reduce((s,e)=>s+e.after,0)/m.length).toFixed(1):0;
+      }).reverse();
+
+      const W=260,H=70,pad={t:8,r:8,b:18,l:8};
+      const cW=W-pad.l-pad.r,cH=H-pad.t-pad.b;
+      const xp=i=>pad.l+i/(Math.max(cycleAvgBef.length-1,1))*cW;
+      const yp=v=>pad.t+cH-(v/10)*cH;
+      const pathBef=cycleAvgBef.map((v,i)=>`${i===0?'M':'L'}${xp(i).toFixed(1)},${yp(v).toFixed(1)}`).join(' ');
+      const pathAft=cycleAvgAft.map((v,i)=>`${i===0?'M':'L'}${xp(i).toFixed(1)},${yp(v).toFixed(1)}`).join(' ');
+      const dotsBef=cycleAvgBef.map((v,i)=>`<circle cx="${xp(i).toFixed(1)}" cy="${yp(v).toFixed(1)}" r="3" fill="var(--amber)"/>`).join('');
+      const dotsAft=cycleAvgAft.map((v,i)=>`<circle cx="${xp(i).toFixed(1)}" cy="${yp(v).toFixed(1)}" r="3" fill="var(--green)"/>`).join('');
+      const y3=yp(3),y4=yp(4),y6=yp(6),y7=yp(7);
+
+      const doubleChart=`<svg width="100%" viewBox="0 0 ${W} ${H}" style="overflow:visible;">
+        <rect x="${pad.l}" y="${y4.toFixed(1)}" width="${cW}" height="${(y3-y4).toFixed(1)}" fill="rgba(244,192,99,0.12)" rx="1"/>
+        <rect x="${pad.l}" y="${y7.toFixed(1)}" width="${cW}" height="${(y6-y7).toFixed(1)}" fill="rgba(126,203,161,0.12)" rx="1"/>
+        <path d="${pathBef}" fill="none" stroke="var(--amber)" stroke-width="1.5" stroke-linejoin="round"/>
+        <path d="${pathAft}" fill="none" stroke="var(--green)" stroke-width="1.5" stroke-linejoin="round"/>
+        ${dotsBef}${dotsAft}
+      </svg>`;
+
+      bloque3 += `<div class="form-card" style="padding:14px;">
+        <div style="font-size:12px;color:var(--hint);margin-bottom:8px;">Promedios — últimos ${last7.length} ciclos</div>
+        <div style="display:flex;gap:12px;margin-bottom:10px;font-size:12px;">
+          <span style="color:var(--amber);">● Hambre al entrar</span>
+          <span style="color:var(--green);">● Saciedad al salir</span>
+        </div>
+        ${doubleChart}
+        <div style="display:flex;justify-content:space-between;margin-top:10px;font-size:13px;">
+          <div><span style="color:var(--muted);">Entrar: </span><strong style="color:var(--amber);">${avgBef}</strong> ${ind(avgBef,3,4)} <span style="color:var(--hint);font-size:11px;">ref 3–4</span></div>
+          <div><span style="color:var(--muted);">Salir: </span><strong style="color:var(--green);">${avgAft}</strong> ${ind(avgAft,6,7)} <span style="color:var(--hint);font-size:11px;">ref 6–7</span></div>
+        </div>
+        <div style="margin-top:10px;font-size:12px;color:var(--hint);display:flex;flex-direction:column;gap:4px;border-top:1px solid var(--border);padding-top:10px;">
+          <span>Zona óptima: <strong style="color:var(--text);">${optimal7}</strong> / ${n7m} comidas principales</span>
+          <span>Distracción alta: <strong style="color:var(--text);">${highDist}</strong> / ${n7m}</span>
+          <span>Comidas ≥ 20 min: <strong style="color:var(--text);">${longMeals}</strong> / ${n7m}</span>
+        </div>
+      </div>`;
+    }
+  }
+
+  // ── BLOQUE 4 — CONSISTENCIA ───────────────────────────────────────────
+  let bloque4 = `<div class="section-label">Consistencia</div>`;
+
+  const totalComplete = completeCycles.length;
+  // Racha actual: ciclos consecutivos sin saltar más de 1 día entre cenas
+  let racha = 0;
+  for(let i=0;i<completeCycles.length;i++){
+    if(i===0){racha=1;continue;}
+    const prevTs = completeCycles[i-1].cena.ts;
+    const currTs = completeCycles[i].cena.ts;
+    const diffDays = (prevTs - currTs) / (1000*60*60*24);
+    if(diffDays <= 2) racha++; else break;
+  }
+
+  const allMainAll = entries.filter(e=>['Desayuno','Almuerzo','Cena'].includes(e.meal));
+  const optimalAll = allMainAll.filter(e=>e.before>=3&&e.before<=4&&e.after>=6&&e.after<=7).length;
+  const optPct = allMainAll.length?Math.round(optimalAll/allMainAll.length*100):0;
+
+  // Gráfico barras 7 ciclos
+  const b7cycles = last7.slice().reverse();
+  const barChart7 = b7cycles.length ? (() => {
+    const W=260,H=60,pad={t:4,r:4,b:16,l:4};
+    const cW=W-pad.l-pad.r,cH=H-pad.t-pad.b;
+    const barW=Math.floor(cW/b7cycles.length)-4;
+    const bars = b7cycles.map((c,i)=>{
+      const main=[c.desayuno,c.almuerzo,c.cena].filter(Boolean);
+      const count=main.length;
+      const opt=main.filter(e=>e.before>=3&&e.before<=4&&e.after>=6&&e.after<=7).length;
+      const pct=count?opt/count:0;
+      const color=pct>=0.67?'#7ecba1':pct>=0.33?'#f4c063':'#e8776a';
+      const h=Math.round((count/3)*cH);
+      const x=pad.l+i*(barW+4);
+      const y=pad.t+cH-h;
+      const label=c.label.split(' ')[0].split('/').slice(0,2).join('/');
+      return `<rect x="${x}" y="${y}" width="${barW}" height="${h}" fill="${color}" rx="2"/>
+        <text x="${x+barW/2}" y="${H-2}" text-anchor="middle" font-size="8" fill="rgba(244,243,236,0.4)">${label}</text>`;
+    }).join('');
+    return `<svg width="100%" viewBox="0 0 ${W} ${H}">${bars}</svg>`;
+  })() : '';
+
+  bloque4 += `<div class="form-card" style="padding:14px;">
+    <div style="display:flex;flex-direction:column;gap:6px;font-size:13px;margin-bottom:12px;">
+      <div style="display:flex;justify-content:space-between;"><span style="color:var(--muted);">Ciclos completos totales</span><strong>${totalComplete}</strong></div>
+      <div style="display:flex;justify-content:space-between;"><span style="color:var(--muted);">Racha actual</span><strong>${racha} ciclo${racha!==1?'s':''}</strong></div>
+      <div style="display:flex;justify-content:space-between;"><span style="color:var(--muted);">Comidas principales registradas</span><strong>${allMainAll.length}</strong></div>
+      <div style="display:flex;justify-content:space-between;"><span style="color:var(--muted);">Zona óptima global</span><strong>${optPct}%</strong></div>
+    </div>
+    ${barChart7 ? `<div style="font-size:11px;color:var(--hint);margin-bottom:6px;">Últimos ${b7cycles.length} ciclos — comidas principales (color = zona óptima)</div>${barChart7}` : ''}
+  </div>`;
+
+  el.innerHTML = bloque1 + bloque2 + bloque3 + bloque4;
+}
+
+function showScreen(id,tab) {
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('screen-'+id).classList.add('active');
+  if(tab)tab.classList.add('active');
+  if(id==='historial')renderHistorial();
+  if(id==='progreso')renderProgreso();
+}
+
+function showToast(msg) {
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2200);
+}
+
+function clearAll() {
+  if(!confirm('¿Borrar TODOS los registros locales?'))return;
+  localStorage.removeItem(LS_KEY);
+  renderHistorial(); renderProgreso();
+  showToast('Registros eliminados');
+}
+
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredPrompt=e;document.getElementById('install-banner').style.display='flex';});
+function installApp(){if(!deferredPrompt)return;deferredPrompt.prompt();deferredPrompt.userChoice.then(()=>{deferredPrompt=null;document.getElementById('install-banner').style.display='none';});}
+
+updateSlider('before');
+updateSlider('after');
+updateDurationSlider();
+
+if('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');
+</script>
+</body>
+</html>
